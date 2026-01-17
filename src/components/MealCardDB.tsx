@@ -41,20 +41,13 @@ export function MealCardDB({ meal, index }: MealCardDBProps) {
         isSoldOut ? 'opacity-50 grayscale' : ''
       }`}
     >
-      {/* Profile Photo with Flag */}
-      <div className="relative flex-shrink-0">
-        <Avatar className="w-10 h-10">
-          <AvatarImage src={meal.cook_avatar || undefined} alt={meal.cook_name} />
-          <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
-            {meal.cook_name.split(' ').map(n => n[0]).join('')}
-          </AvatarFallback>
-        </Avatar>
-        {meal.nationality && (
-          <span className="absolute -bottom-1 -right-1 text-sm">
-            {getFlag(meal.nationality)}
-          </span>
-        )}
-      </div>
+      {/* Profile Photo */}
+      <Avatar className="w-10 h-10 flex-shrink-0">
+        <AvatarImage src={meal.cook_avatar || undefined} alt={meal.cook_name} />
+        <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+          {meal.cook_name.split(' ').map(n => n[0]).join('')}
+        </AvatarFallback>
+      </Avatar>
 
       {/* Dish Info */}
       <div className="flex-1 min-w-0">
@@ -64,9 +57,9 @@ export function MealCardDB({ meal, index }: MealCardDBProps) {
           </h3>
           {!isSoldOut ? (
             <span
-              className={`flex-shrink-0 px-1.5 py-0.5 text-[11px] font-medium rounded ${
+              className={`flex-shrink-0 px-1.5 py-0.5 text-[11px] font-semibold rounded ${
                 isUrgent
-                  ? 'bg-primary/25 text-primary animate-pulse'
+                  ? 'bg-red-500/20 text-red-600 dark:text-red-400 animate-[pulse_0.8s_ease-in-out_infinite]'
                   : 'bg-primary/15 text-primary'
               }`}
             >
@@ -79,11 +72,13 @@ export function MealCardDB({ meal, index }: MealCardDBProps) {
           )}
         </div>
         
-        {/* Cook info with nationality and rating */}
+        {/* Cook info with flag next to name */}
         <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
-          <span className="truncate">
+          <span className="truncate flex items-center gap-1">
+            {meal.nationality && (
+              <span className="text-sm">{getFlag(meal.nationality)}</span>
+            )}
             {meal.cook_name}
-            {meal.nationality && ` (${meal.nationality})`}
           </span>
           {meal.cook_rating && (
             <span className="flex items-center gap-0.5 text-primary flex-shrink-0">
@@ -94,10 +89,10 @@ export function MealCardDB({ meal, index }: MealCardDBProps) {
           <span className="flex-shrink-0">· {distance}</span>
         </div>
         
-        {/* Authentic recipe tag */}
+        {/* Cuisine type - clean and simple */}
         {meal.nationality && (
-          <p className="text-[11px] text-primary/70 italic">
-            Authentic {meal.nationality} recipe
+          <p className="text-[11px] text-muted-foreground/70">
+            {meal.nationality} Cuisine
           </p>
         )}
       </div>
@@ -129,8 +124,6 @@ export function MealCardDB({ meal, index }: MealCardDBProps) {
             className={`px-2.5 py-1 text-[11px] font-medium rounded-full transition-all ${
               isSoldOut
                 ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                : !user
-                ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95'
                 : 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95'
             }`}
           >
