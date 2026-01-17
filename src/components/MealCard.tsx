@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { User, Clock, ShoppingBag } from 'lucide-react';
+import { MapPin, Heart } from 'lucide-react';
 import { Meal } from '@/types/homebite';
 import { useHomebite } from '@/context/HomebiteContext';
 import { toast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface MealCardProps {
   meal: Meal;
@@ -18,86 +19,109 @@ export function MealCard({ meal, index }: MealCardProps) {
     const success = purchaseMeal(meal.id);
     if (success) {
       toast({
-        title: "Order placed! 🎉",
-        description: `Your ${meal.dishName} from ${meal.cookName} is being prepared.`,
+        title: "You're all set! 🎉",
+        description: `${meal.cookName} is preparing your ${meal.dishName}. They'll message you soon!`,
       });
     }
   };
 
   return (
-    <motion.div
+    <motion.article
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, duration: 0.4 }}
-      className={`group relative bg-card rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-lg transition-all duration-300 ${
-        isSoldOut ? 'opacity-75' : ''
+      transition={{ delay: index * 0.08, duration: 0.4 }}
+      className={`bg-card border border-border rounded-2xl overflow-hidden ${
+        isSoldOut ? 'opacity-60' : ''
       }`}
     >
-      {/* Image placeholder with gradient */}
-      <div className="relative h-40 bg-gradient-to-br from-terracotta-light/30 to-sage-light/30 overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-4xl">🍽️</span>
+      {/* Cook Header - Like a social post */}
+      <div className="flex items-center gap-3 p-4 pb-3">
+        <Avatar className="w-12 h-12 border-2 border-primary/20">
+          <AvatarImage src={meal.cookAvatar} alt={meal.cookName} />
+          <AvatarFallback className="bg-sage/20 text-sage-dark font-medium">
+            {meal.cookName.split(' ').map(n => n[0]).join('')}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-display font-semibold text-foreground truncate">
+            {meal.cookName}
+          </h3>
+          <p className="text-sm text-muted-foreground flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            Cooking today in {meal.neighborhood}
+          </p>
         </div>
-        
-        {/* Status Badge */}
-        {isSoldOut ? (
-          <div className="absolute top-3 right-3 bg-muted text-muted-foreground px-3 py-1 rounded-full text-xs font-medium">
-            Sold Out
-          </div>
-        ) : isLowStock ? (
-          <div className="absolute top-3 right-3 bg-terracotta text-primary-foreground px-3 py-1 rounded-full text-xs font-medium animate-pulse-soft">
-            Only {meal.remainingPortions} left!
-          </div>
-        ) : null}
       </div>
 
-      <div className="p-4 space-y-3">
-        {/* Cook info */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="w-6 h-6 rounded-full bg-sage/20 flex items-center justify-center">
-            <User className="w-3 h-3 text-sage-dark" />
+      {/* Food Image - Large and appetizing */}
+      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+        {meal.imageUrl ? (
+          <img
+            src={meal.imageUrl}
+            alt={meal.dishName}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-terracotta-light/30 to-sage-light/30">
+            <span className="text-6xl">🍽️</span>
           </div>
-          <span>{meal.cookName}</span>
+        )}
+        
+        {/* Friendly Status Badges */}
+        {isSoldOut ? (
+          <div className="absolute top-3 right-3 bg-warm-brown/80 text-cream px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm">
+            All gone! 💫
+          </div>
+        ) : isLowStock ? (
+          <div className="absolute top-3 right-3 bg-terracotta text-cream px-3 py-1.5 rounded-full text-sm font-medium animate-pulse-soft">
+            Only {meal.remainingPortions} left!
+          </div>
+        ) : (
+          <div className="absolute top-3 right-3 bg-sage/90 text-cream px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm">
+            {meal.remainingPortions} portions left
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-4 space-y-3">
+        {/* Dish name and price */}
+        <div className="flex items-start justify-between gap-3">
+          <h4 className="font-display text-xl font-semibold text-foreground leading-tight">
+            {meal.dishName}
+          </h4>
+          <span className="text-xl font-semibold text-terracotta whitespace-nowrap">
+            €{meal.price.toFixed(2)}
+          </span>
         </div>
 
-        {/* Dish name */}
-        <h3 className="font-display text-lg font-semibold text-foreground leading-tight">
-          {meal.dishName}
-        </h3>
-
-        {/* Description */}
-        <p className="text-sm text-muted-foreground line-clamp-2">
+        {/* Personal description */}
+        <p className="text-muted-foreground leading-relaxed">
           {meal.description}
         </p>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex flex-col">
-            <span className="text-xl font-semibold text-foreground">
-              €{meal.price.toFixed(2)}
-            </span>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {meal.remainingPortions}/{meal.totalPortions} portions
-            </span>
-          </div>
-
+        {/* Action Row */}
+        <div className="flex items-center gap-3 pt-2">
           {role === 'eater' && (
-            <button
-              onClick={handlePurchase}
-              disabled={isSoldOut}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                isSoldOut
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                  : 'bg-primary text-primary-foreground hover:bg-terracotta-dark active:scale-95'
-              }`}
-            >
-              <ShoppingBag className="w-4 h-4" />
-              {isSoldOut ? 'Sold Out' : 'Order'}
-            </button>
+            <>
+              <button
+                onClick={handlePurchase}
+                disabled={isSoldOut}
+                className={`flex-1 py-3 rounded-xl text-base font-medium transition-all duration-200 ${
+                  isSoldOut
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                    : 'bg-primary text-primary-foreground hover:bg-terracotta-dark active:scale-[0.98]'
+                }`}
+              >
+                {isSoldOut ? 'Sold Out' : 'Reserve a Plate'}
+              </button>
+              <button className="p-3 rounded-xl border border-border hover:bg-muted transition-colors">
+                <Heart className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </>
           )}
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   );
 }

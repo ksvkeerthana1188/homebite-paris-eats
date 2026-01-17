@@ -39,6 +39,7 @@ export function CookDashboard() {
     addMeal({
       cookId: currentCook.id,
       cookName: currentCook.name,
+      neighborhood: currentCook.neighborhood,
       dishName: formData.dishName,
       description: formData.description,
       price,

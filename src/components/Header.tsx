@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ChefHat, Utensils } from 'lucide-react';
+import { Home, Search } from 'lucide-react';
 import { useHomebite } from '@/context/HomebiteContext';
 
 export function Header() {
@@ -16,7 +16,7 @@ export function Header() {
             className="flex items-center gap-2"
           >
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <ChefHat className="w-5 h-5 text-primary-foreground" />
+              <Home className="w-5 h-5 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-display font-semibold text-foreground">
               Homebite
@@ -37,8 +37,8 @@ export function Header() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <Utensils className="w-4 h-4" />
-              <span className="hidden sm:inline">Eater</span>
+              <Search className="w-4 h-4" />
+              <span className="hidden sm:inline">Find Food</span>
             </button>
             <button
               onClick={() => setRole('cook')}
@@ -48,8 +48,8 @@ export function Header() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <ChefHat className="w-4 h-4" />
-              <span className="hidden sm:inline">Cook</span>
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">Start Cooking</span>
             </button>
           </motion.div>
         </div>
