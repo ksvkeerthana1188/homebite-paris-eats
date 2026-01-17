@@ -4,6 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 type AppRole = 'cook' | 'eater';
 
+export interface DietaryPreferences {
+  allergies?: string[];
+  restrictions?: string[];
+  maxBudget?: number | null;
+}
+
 interface Profile {
   id: string;
   user_id: string;
@@ -11,6 +17,7 @@ interface Profile {
   avatar_url: string | null;
   neighborhood: string | null;
   nationality: string | null;
+  dietary_preferences: DietaryPreferences | null;
 }
 
 interface AuthContextType {

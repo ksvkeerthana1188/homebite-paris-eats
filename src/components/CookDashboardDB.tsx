@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, ChefHat, Bell, Settings, Camera } from 'lucide-react';
+import { Plus, X, ChefHat, Bell, Settings, Camera, Sparkles, Loader2 } from 'lucide-react';
 import { useMyMeals, MealWithCook } from '@/hooks/useMeals';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/context/AuthContext';
+import { useAITagSuggestions } from '@/hooks/useAITagSuggestions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { ImageUpload, AvatarUpload } from '@/components/ImageUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -18,9 +20,11 @@ export function CookDashboardDB() {
   const { meals, loading: mealsLoading, addMeal } = useMyMeals();
   const { orders, updateOrderStatus } = useOrders();
   const { user, profile, refetchProfile } = useAuth();
+  const { loading: aiLoading, suggestedTags, analyzeDish, removeTag, clearTags } = useAITagSuggestions();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
   const [formData, setFormData] = useState({
     dishName: '',
@@ -53,6 +57,29 @@ export function CookDashboardDB() {
   const myOrders = orders.filter((o) => o.cook_id === user?.id);
   const pendingOrders = myOrders.filter((o) => !['picked_up', 'cancelled'].includes(o.status));
 
+  // Debounced AI analysis
+  const triggerAIAnalysis = useCallback(() => {
+    if (formData.dishName.trim().length >= 3) {
+      analyzeDish(formData.dishName, formData.description);
+      setHasAnalyzed(true);
+    }
+  }, [formData.dishName, formData.description, analyzeDish]);
+
+  // Trigger AI analysis when dish name or description changes (with debounce)
+  useEffect(() => {
+    if (!formData.dishName.trim()) {
+      clearTags();
+      setHasAnalyzed(false);
+      return;
+    }
+    
+    const timer = setTimeout(() => {
+      triggerAIAnalysis();
+    }, 800); // 800ms debounce
+
+    return () => clearTimeout(timer);
+  }, [formData.dishName, formData.description, triggerAIAnalysis, clearTags]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -66,10 +93,13 @@ export function CookDashboardDB() {
       price: parseFloat(formData.price),
       total_portions: parseInt(formData.portions),
       image_url: formData.imageUrl || undefined,
+      tags: suggestedTags,
     });
 
     if (success) {
       setFormData({ dishName: '', description: '', price: '', portions: '', imageUrl: '' });
+      clearTags();
+      setHasAnalyzed(false);
       setIsFormOpen(false);
     }
 
@@ -227,6 +257,47 @@ export function CookDashboardDB() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
               />
+            </div>
+
+            {/* AI Tag Suggestions */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <Label className="text-sm">AI-Suggested Tags</Label>
+                {aiLoading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+              </div>
+              
+              {!hasAnalyzed && formData.dishName.length < 3 && (
+                <p className="text-xs text-muted-foreground">
+                  Enter a dish name to get AI-powered dietary tag suggestions
+                </p>
+              )}
+              
+              {hasAnalyzed && suggestedTags.length === 0 && !aiLoading && (
+                <p className="text-xs text-muted-foreground">
+                  No specific dietary tags detected. Add more details in the description.
+                </p>
+              )}
+              
+              {suggestedTags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {suggestedTags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="secondary"
+                      className="flex items-center gap-1 bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
+                      onClick={() => removeTag(tag)}
+                    >
+                      {tag}
+                      <X className="w-3 h-3" />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-[11px] text-muted-foreground">
+                Click a tag to remove it. These help eaters find meals matching their dietary needs.
+              </p>
             </div>
 
             <div className="space-y-2">

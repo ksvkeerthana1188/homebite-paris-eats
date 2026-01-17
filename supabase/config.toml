@@ -1,1 +1,7 @@
 project_id = "mnnuvxdwwmoqvzvtfmiy"
+
+[functions.analyze-dish]
+verify_jwt = false
+
+[functions.recommend-meals]
+verify_jwt = false
