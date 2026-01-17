@@ -12,6 +12,7 @@ export interface MealWithCook {
   total_portions: number;
   remaining_portions: number;
   image_url: string | null;
+  tags: string[];
   created_at: string;
   cook_name: string;
   cook_avatar: string | null;
@@ -64,6 +65,7 @@ export function useMeals() {
         const ratingData = ratingsMap.get(meal.cook_id);
         return {
           ...meal,
+          tags: (meal as any).tags || [],
           cook_name: profile?.display_name || 'Anonymous Cook',
           cook_avatar: profile?.avatar_url || null,
           neighborhood: profile?.neighborhood || null,
@@ -137,6 +139,7 @@ export function useMyMeals() {
 
       const mealsWithCook: MealWithCook[] = (data || []).map((meal) => ({
         ...meal,
+        tags: (meal as any).tags || [],
         cook_name: profile?.display_name || 'You',
         cook_avatar: profile?.avatar_url || null,
         neighborhood: profile?.neighborhood || null,
@@ -183,6 +186,7 @@ export function useMyMeals() {
     price: number;
     total_portions: number;
     image_url?: string;
+    tags?: string[];
   }) => {
     if (!user) {
       toast({
@@ -202,7 +206,8 @@ export function useMyMeals() {
         total_portions: mealData.total_portions,
         remaining_portions: mealData.total_portions,
         image_url: mealData.image_url || null,
-      });
+        tags: mealData.tags || [],
+      } as any);
 
       if (error) throw error;
 

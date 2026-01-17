@@ -24,6 +24,7 @@ export type Database = {
           image_url: string | null
           price: number
           remaining_portions: number
+          tags: string[] | null
           total_portions: number
           updated_at: string
         }
@@ -36,6 +37,7 @@ export type Database = {
           image_url?: string | null
           price: number
           remaining_portions: number
+          tags?: string[] | null
           total_portions: number
           updated_at?: string
         }
@@ -48,6 +50,7 @@ export type Database = {
           image_url?: string | null
           price?: number
           remaining_portions?: number
+          tags?: string[] | null
           total_portions?: number
           updated_at?: string
         }
@@ -95,6 +98,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          dietary_preferences: Json | null
           display_name: string
           id: string
           nationality: string | null
@@ -105,6 +109,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          dietary_preferences?: Json | null
           display_name: string
           id?: string
           nationality?: string | null
@@ -115,6 +120,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          dietary_preferences?: Json | null
           display_name?: string
           id?: string
           nationality?: string | null

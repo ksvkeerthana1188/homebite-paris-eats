@@ -1,20 +1,41 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Settings, Sparkles } from 'lucide-react';
 import { useMeals } from '@/hooks/useMeals';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/context/AuthContext';
+import { useAIRecommendations } from '@/hooks/useAIRecommendations';
 import { MealCardDB } from './MealCardDB';
 import { OrderStatusBar } from './OrderStatusBar';
+import { DietaryPreferencesModal } from './DietaryPreferencesModal';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 export function EaterFeedDB() {
   const { meals, loading: mealsLoading } = useMeals();
   const { orders, loading: ordersLoading } = useOrders();
   const { user } = useAuth();
+  const { recommendations, fetchRecommendations, hasPreferences } = useAIRecommendations();
+  const [showPrefsModal, setShowPrefsModal] = useState(false);
 
   // Get user's active orders (not picked up or cancelled)
   const activeOrders = orders.filter(
     (o) => o.eater_id === user?.id && !['picked_up', 'cancelled'].includes(o.status)
   );
+
+  // Fetch AI recommendations when meals load
+  useEffect(() => {
+    if (!mealsLoading && meals.length > 0 && hasPreferences()) {
+      fetchRecommendations(meals.map(m => ({
+        id: m.id,
+        dish_name: m.dish_name,
+        description: m.description,
+        price: m.price,
+        tags: m.tags || [],
+        remaining_portions: m.remaining_portions
+      })));
+    }
+  }, [mealsLoading, meals, fetchRecommendations, hasPreferences]);
 
   if (mealsLoading) {
     return (
@@ -33,6 +54,10 @@ export function EaterFeedDB() {
       </div>
     );
   }
+
+  // Get recommended meals (those with AI reasons)
+  const recommendedMeals = meals.filter(m => recommendations.has(m.id));
+  const otherMeals = meals.filter(m => !recommendations.has(m.id));
 
   return (
     <div className="space-y-6">
@@ -55,7 +80,54 @@ export function EaterFeedDB() {
         </motion.div>
       )}
 
-      {/* Meals Feed */}
+      {/* Dietary Preferences Button */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={() => setShowPrefsModal(true)}
+        >
+          <Settings className="w-4 h-4" />
+          Dietary Preferences
+        </Button>
+        {hasPreferences() && (
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-primary" />
+            AI recommendations active
+          </span>
+        )}
+      </div>
+
+      {/* AI Recommended Meals */}
+      {recommendedMeals.length > 0 && (
+        <div>
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <h2 className="font-display text-lg text-foreground">
+                Recommended for You
+              </h2>
+            </div>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              AI-picked meals matching your dietary preferences
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-primary/20 overflow-hidden bg-card mb-6">
+            {recommendedMeals.map((meal, index) => (
+              <MealCardDB 
+                key={meal.id} 
+                meal={meal} 
+                index={index}
+                aiReason={recommendations.get(meal.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* All Meals Feed */}
       <div>
         <div className="mb-4">
           <div className="flex items-center justify-between">
@@ -78,12 +150,18 @@ export function EaterFeedDB() {
           </div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden bg-card">
-            {meals.map((meal, index) => (
+            {(recommendedMeals.length > 0 ? otherMeals : meals).map((meal, index) => (
               <MealCardDB key={meal.id} meal={meal} index={index} />
             ))}
           </div>
         )}
       </div>
+
+      {/* Dietary Preferences Modal */}
+      <DietaryPreferencesModal
+        isOpen={showPrefsModal}
+        onClose={() => setShowPrefsModal(false)}
+      />
     </div>
   );
 }
