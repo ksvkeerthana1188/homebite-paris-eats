@@ -16,6 +16,9 @@ export interface MealWithCook {
   cook_name: string;
   cook_avatar: string | null;
   neighborhood: string | null;
+  nationality: string | null;
+  cook_rating: number | null;
+  cook_rating_count: number;
 }
 
 export function useMeals() {
@@ -39,15 +42,34 @@ export function useMeals() {
         .select('*')
         .in('user_id', cookIds);
 
+      // Fetch ratings for all cooks
+      const { data: ratingsData } = await supabase
+        .from('ratings' as any)
+        .select('cook_id, rating') as { data: Array<{ cook_id: string; rating: number }> | null; error: any };
+
+      // Aggregate ratings
+      const ratingsMap = new Map<string, { sum: number; count: number }>();
+      (ratingsData || []).forEach((r) => {
+        const existing = ratingsMap.get(r.cook_id) || { sum: 0, count: 0 };
+        ratingsMap.set(r.cook_id, {
+          sum: existing.sum + r.rating,
+          count: existing.count + 1,
+        });
+      });
+
       const profileMap = new Map(profilesData?.map((p) => [p.user_id, p]) || []);
 
       const mealsWithCooks: MealWithCook[] = (mealsData || []).map((meal) => {
         const profile = profileMap.get(meal.cook_id);
+        const ratingData = ratingsMap.get(meal.cook_id);
         return {
           ...meal,
           cook_name: profile?.display_name || 'Anonymous Cook',
           cook_avatar: profile?.avatar_url || null,
           neighborhood: profile?.neighborhood || null,
+          nationality: (profile as any)?.nationality || null,
+          cook_rating: ratingData ? ratingData.sum / ratingData.count : null,
+          cook_rating_count: ratingData?.count || 0,
         };
       });
 
@@ -118,6 +140,9 @@ export function useMyMeals() {
         cook_name: profile?.display_name || 'You',
         cook_avatar: profile?.avatar_url || null,
         neighborhood: profile?.neighborhood || null,
+        nationality: (profile as any)?.nationality || null,
+        cook_rating: null,
+        cook_rating_count: 0,
       }));
 
       setMeals(mealsWithCook);
