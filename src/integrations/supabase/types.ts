@@ -124,6 +124,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ratings: {
+        Row: {
+          cook_id: string
+          created_at: string
+          eater_id: string
+          id: string
+          order_id: string
+          rating: number
+        }
+        Insert: {
+          cook_id: string
+          created_at?: string
+          eater_id: string
+          id?: string
+          order_id: string
+          rating: number
+        }
+        Update: {
+          cook_id?: string
+          created_at?: string
+          eater_id?: string
+          id?: string
+          order_id?: string
+          rating?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
