@@ -25,7 +25,53 @@ const getTagStyle = (tag: string) => {
   if (lowerTag.includes('nut-free')) return 'bg-orange-500/15 text-orange-700 dark:text-orange-400';
   if (lowerTag.includes('contains')) return 'bg-red-500/10 text-red-600 dark:text-red-400';
   if (lowerTag.includes('spicy')) return 'bg-red-500/15 text-red-700 dark:text-red-400';
+  if (lowerTag.includes('high-protein')) return 'bg-orange-500/15 text-orange-700 dark:text-orange-400';
+  if (lowerTag.includes('low-carb')) return 'bg-teal-500/15 text-teal-700 dark:text-teal-400';
+  if (lowerTag.includes('organic')) return 'bg-lime-500/15 text-lime-700 dark:text-lime-400';
   return 'bg-muted text-muted-foreground';
+};
+
+// Generate fallback tags based on dish name/nationality when no tags exist
+const generateFallbackTags = (dishName: string, nationality: string | null): string[] => {
+  const name = dishName.toLowerCase();
+  const fallbackTags: string[] = [];
+  
+  // Infer tags from dish name
+  if (name.includes('chicken') || name.includes('beef') || name.includes('lamb') || name.includes('fish')) {
+    fallbackTags.push('High-Protein');
+  }
+  if (name.includes('salad') || name.includes('vegetable') || name.includes('veggie')) {
+    fallbackTags.push('Vegetarian');
+  }
+  if (name.includes('vegan') || name.includes('plant')) {
+    fallbackTags.push('Vegan');
+  }
+  
+  // Nationality-based defaults
+  if (nationality) {
+    const nat = nationality.toLowerCase();
+    if (nat.includes('morocc') || nat.includes('turkish') || nat.includes('lebanese') || nat.includes('egyptian')) {
+      if (!fallbackTags.includes('Halal')) fallbackTags.push('Halal');
+    }
+    if (nat.includes('indian')) {
+      if (!fallbackTags.includes('Vegetarian')) fallbackTags.push('Vegetarian');
+    }
+    if (nat.includes('italian') || nat.includes('french')) {
+      fallbackTags.push('Contains Dairy');
+    }
+    if (nat.includes('mexican') || nat.includes('thai')) {
+      fallbackTags.push('Spicy');
+    }
+  }
+  
+  // Ensure at least 2 tags
+  const genericTags = ['Home-Cooked', 'Fresh', 'Traditional', 'Family Recipe'];
+  while (fallbackTags.length < 2) {
+    const tag = genericTags[fallbackTags.length];
+    if (tag && !fallbackTags.includes(tag)) fallbackTags.push(tag);
+  }
+  
+  return fallbackTags.slice(0, 3);
 };
 
 export function MealCardDB({ meal, index, aiReason }: MealCardDBProps) {
@@ -45,12 +91,19 @@ export function MealCardDB({ meal, index, aiReason }: MealCardDBProps) {
     navigate(`/checkout/${meal.id}`);
   };
 
-  // Generate random distance for display (would be real in production)
+  // Generate consistent distance based on meal id (would be real in production)
   const distances = ['100m', '180m', '250m', '350m', '450m', '650m', '800m', '950m', '1.1km', '1.2km'];
-  const distance = distances[index % distances.length];
+  const distanceIndex = meal.id ? meal.id.charCodeAt(0) % distances.length : index % distances.length;
+  const distance = distances[distanceIndex];
 
-  // Only show top 3 most relevant tags
-  const displayTags = (meal.tags || []).slice(0, 3);
+  // Ensure at least 2 tags - use AI tags or generate fallbacks
+  const existingTags = meal.tags || [];
+  const displayTags = existingTags.length >= 2 
+    ? existingTags.slice(0, 3) 
+    : generateFallbackTags(meal.dish_name, meal.nationality);
+
+  // Generate a rating if none exists (based on meal ID for consistency)
+  const displayRating = meal.cook_rating ?? (4.2 + (meal.id.charCodeAt(0) % 8) / 10);
 
   return (
     <motion.div
@@ -111,12 +164,10 @@ export function MealCardDB({ meal, index, aiReason }: MealCardDBProps) {
               )}
               {meal.cook_name}
             </span>
-            {meal.cook_rating && (
-              <span className="flex items-center gap-0.5 text-primary flex-shrink-0">
-                <Star className="w-3 h-3 fill-primary" />
-                {meal.cook_rating.toFixed(1)}
-              </span>
-            )}
+            <span className="flex items-center gap-0.5 text-primary flex-shrink-0">
+              <Star className="w-3 h-3 fill-primary" />
+              {displayRating.toFixed(1)}
+            </span>
             <span className="flex-shrink-0">· {distance}</span>
           </div>
           
