@@ -346,7 +346,8 @@ export function CookDashboardDB() {
 function ActiveListingCardDB({ meal, index }: { meal: MealWithCook; index: number }) {
   const isSoldOut = meal.remaining_portions <= 0;
   const soldCount = meal.total_portions - meal.remaining_portions;
-  const progress = (soldCount / meal.total_portions) * 100;
+  // Progress bar shows remaining inventory: 100% when full, depletes as portions are sold
+  const remainingPercentage = (meal.remaining_portions / meal.total_portions) * 100;
 
   return (
     <motion.div
@@ -373,8 +374,8 @@ function ActiveListingCardDB({ meal, index }: { meal: MealWithCook; index: numbe
           <span>{soldCount} sold</span>
         </div>
         <Progress
-          value={progress}
-          className={`h-2 ${progress === 100 ? 'bg-muted' : ''}`}
+          value={remainingPercentage}
+          className={`h-2 ${isSoldOut ? 'bg-muted' : ''}`}
         />
       </div>
     </motion.div>
