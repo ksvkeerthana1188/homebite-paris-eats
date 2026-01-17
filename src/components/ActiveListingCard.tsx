@@ -50,9 +50,7 @@ export function ActiveListingCard({ meal, index }: ActiveListingCardProps) {
               className={`h-full rounded-full ${
                 isSoldOut
                   ? 'bg-muted-foreground'
-                  : portionPercentage <= 25
-                  ? 'bg-terracotta'
-                  : 'bg-sage'
+                  : 'bg-primary'
               }`}
             />
           </div>
