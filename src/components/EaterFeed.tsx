@@ -14,24 +14,24 @@ export function EaterFeed() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Friendly Hero */}
+    <div className="space-y-0">
+      {/* Simple Header */}
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center py-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="px-4 py-4 border-b border-border"
       >
-        <h2 className="text-2xl md:text-3xl font-display font-semibold text-foreground mb-2">
-          Your neighbors are cooking 🍳
+        <h2 className="text-lg font-display text-foreground">
+          Cooking nearby today
         </h2>
-        <p className="text-muted-foreground flex items-center justify-center gap-2">
-          <MapPin className="w-4 h-4" />
-          Fresh homemade meals near you in Paris
+        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+          <MapPin className="w-3 h-3" />
+          Paris neighborhoods
         </p>
       </motion.div>
 
-      {/* Vertical Feed - Social style */}
-      <div className="max-w-lg mx-auto space-y-6">
+      {/* Compact Vertical List */}
+      <div className="divide-y divide-border">
         {sortedMeals.map((meal, index) => (
           <MealCard key={meal.id} meal={meal} index={index} />
         ))}
@@ -41,14 +41,14 @@ export function EaterFeed() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-16"
+          className="text-center py-12 px-4"
         >
-          <span className="text-6xl mb-4 block">🏠</span>
-          <h3 className="text-xl font-display text-foreground mb-2">
-            No one's cooking yet today
+          <span className="text-4xl mb-3 block">🏠</span>
+          <h3 className="font-display text-foreground mb-1">
+            No one's cooking yet
           </h3>
-          <p className="text-muted-foreground">
-            Be the first to share a meal with your neighbors!
+          <p className="text-sm text-muted-foreground">
+            Check back soon!
           </p>
         </motion.div>
       )}

@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { MapPin, Heart } from 'lucide-react';
 import { Meal } from '@/types/homebite';
 import { useHomebite } from '@/context/HomebiteContext';
 import { toast } from '@/hooks/use-toast';
@@ -13,48 +12,57 @@ interface MealCardProps {
 export function MealCard({ meal, index }: MealCardProps) {
   const { purchaseMeal, role } = useHomebite();
   const isSoldOut = meal.remainingPortions <= 0;
-  const isLowStock = meal.remainingPortions <= 2 && meal.remainingPortions > 0;
 
   const handlePurchase = () => {
     const success = purchaseMeal(meal.id);
     if (success) {
       toast({
-        title: "You're all set! 🎉",
-        description: `${meal.cookName} is preparing your ${meal.dishName}. They'll message you soon!`,
+        title: "Reserved! 🎉",
+        description: `${meal.cookName} will have your ${meal.dishName} ready.`,
       });
     }
   };
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.08, duration: 0.4 }}
-      className={`bg-card border border-border rounded-2xl overflow-hidden ${
-        isSoldOut ? 'opacity-60' : ''
+      transition={{ delay: index * 0.05, duration: 0.25 }}
+      className={`flex items-center gap-3 p-3 bg-card border-b border-border ${
+        isSoldOut ? 'opacity-50' : ''
       }`}
     >
-      {/* Cook Header - Like a social post */}
-      <div className="flex items-center gap-3 p-4 pb-3">
-        <Avatar className="w-12 h-12 border-2 border-primary/20">
-          <AvatarImage src={meal.cookAvatar} alt={meal.cookName} />
-          <AvatarFallback className="bg-sage/20 text-sage-dark font-medium">
-            {meal.cookName.split(' ').map(n => n[0]).join('')}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-display font-semibold text-foreground truncate">
-            {meal.cookName}
+      {/* Profile Photo */}
+      <Avatar className="w-11 h-11 flex-shrink-0">
+        <AvatarImage src={meal.cookAvatar} alt={meal.cookName} />
+        <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+          {meal.cookName.split(' ').map(n => n[0]).join('')}
+        </AvatarFallback>
+      </Avatar>
+
+      {/* Dish Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="font-display text-base text-foreground truncate">
+            {meal.dishName}
           </h3>
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            Cooking today in {meal.neighborhood}
-          </p>
+          {!isSoldOut ? (
+            <span className="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
+              {meal.remainingPortions} left
+            </span>
+          ) : (
+            <span className="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium bg-muted text-muted-foreground rounded">
+              Gone
+            </span>
+          )}
         </div>
+        <p className="text-sm text-muted-foreground truncate">
+          {meal.cookName} · {meal.neighborhood}
+        </p>
       </div>
 
-      {/* Food Image - Large and appetizing */}
-      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+      {/* Food Thumbnail */}
+      <div className="w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
         {meal.imageUrl ? (
           <img
             src={meal.imageUrl}
@@ -62,66 +70,31 @@ export function MealCard({ meal, index }: MealCardProps) {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-terracotta-light/30 to-sage-light/30">
-            <span className="text-6xl">🍽️</span>
-          </div>
-        )}
-        
-        {/* Friendly Status Badges */}
-        {isSoldOut ? (
-          <div className="absolute top-3 right-3 bg-warm-brown/80 text-cream px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm">
-            All gone! 💫
-          </div>
-        ) : isLowStock ? (
-          <div className="absolute top-3 right-3 bg-terracotta text-cream px-3 py-1.5 rounded-full text-sm font-medium animate-pulse-soft">
-            Only {meal.remainingPortions} left!
-          </div>
-        ) : (
-          <div className="absolute top-3 right-3 bg-sage/90 text-cream px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm">
-            {meal.remainingPortions} portions left
+          <div className="w-full h-full flex items-center justify-center text-xl">
+            🍽️
           </div>
         )}
       </div>
 
-      {/* Content */}
-      <div className="p-4 space-y-3">
-        {/* Dish name and price */}
-        <div className="flex items-start justify-between gap-3">
-          <h4 className="font-display text-xl font-semibold text-foreground leading-tight">
-            {meal.dishName}
-          </h4>
-          <span className="text-xl font-semibold text-terracotta whitespace-nowrap">
-            €{meal.price.toFixed(2)}
-          </span>
-        </div>
-
-        {/* Personal description */}
-        <p className="text-muted-foreground leading-relaxed">
-          {meal.description}
-        </p>
-
-        {/* Action Row */}
-        <div className="flex items-center gap-3 pt-2">
-          {role === 'eater' && (
-            <>
-              <button
-                onClick={handlePurchase}
-                disabled={isSoldOut}
-                className={`flex-1 py-3 rounded-xl text-base font-medium transition-all duration-200 ${
-                  isSoldOut
-                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : 'bg-primary text-primary-foreground hover:bg-terracotta-dark active:scale-[0.98]'
-                }`}
-              >
-                {isSoldOut ? 'Sold Out' : 'Reserve a Plate'}
-              </button>
-              <button className="p-3 rounded-xl border border-border hover:bg-muted transition-colors">
-                <Heart className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </>
-          )}
-        </div>
+      {/* Price & Action */}
+      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        <span className="text-base font-semibold text-foreground">
+          €{meal.price.toFixed(0)}
+        </span>
+        {role === 'eater' && (
+          <button
+            onClick={handlePurchase}
+            disabled={isSoldOut}
+            className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
+              isSoldOut
+                ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                : 'bg-primary text-primary-foreground hover:bg-terracotta-dark active:scale-95'
+            }`}
+          >
+            {isSoldOut ? 'Sold' : 'Order'}
+          </button>
+        )}
       </div>
-    </motion.article>
+    </motion.div>
   );
 }
