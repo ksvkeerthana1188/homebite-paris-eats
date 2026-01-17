@@ -57,13 +57,18 @@ export function EaterFeedDB() {
 
       {/* Meals Feed */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg text-foreground">
-            What's Cooking Today
-          </h2>
-          <span className="text-sm text-muted-foreground">
-            {meals.filter((m) => m.remaining_portions > 0).length} available
-          </span>
+        <div className="mb-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg text-foreground">
+              Today's Neighborhood Specials
+            </h2>
+            <span className="text-sm text-muted-foreground">
+              {meals.filter((m) => m.remaining_portions > 0).length} available
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Freshly made by your neighbors in Paris.
+          </p>
         </div>
 
         {meals.length === 0 ? (
