@@ -1,0 +1,111 @@
+import { motion } from 'framer-motion';
+import { MealWithCook } from '@/hooks/useMeals';
+import { useOrders } from '@/hooks/useOrders';
+import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+interface MealCardDBProps {
+  meal: MealWithCook;
+  index: number;
+}
+
+export function MealCardDB({ meal, index }: MealCardDBProps) {
+  const { placeOrder } = useOrders();
+  const { user, role } = useAuth();
+  
+  const isSoldOut = meal.remaining_portions <= 0;
+  const isUrgent = meal.remaining_portions <= 3 && meal.remaining_portions > 0;
+  const isCook = role === 'cook';
+  const isOwnMeal = user?.id === meal.cook_id;
+
+  const handleOrder = async () => {
+    await placeOrder(meal.id);
+  };
+
+  // Generate random distance for display (would be real in production)
+  const distances = ['100m', '180m', '250m', '350m', '450m', '650m', '800m', '950m', '1.1km', '1.2km'];
+  const distance = distances[index % distances.length];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04, duration: 0.2 }}
+      className={`flex items-center gap-3 px-4 py-3 bg-card border-b border-border transition-all ${
+        isSoldOut ? 'opacity-50 grayscale' : ''
+      }`}
+    >
+      {/* Profile Photo */}
+      <Avatar className="w-10 h-10 flex-shrink-0">
+        <AvatarImage src={meal.cook_avatar || undefined} alt={meal.cook_name} />
+        <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+          {meal.cook_name.split(' ').map(n => n[0]).join('')}
+        </AvatarFallback>
+      </Avatar>
+
+      {/* Dish Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="font-display text-[15px] text-foreground truncate">
+            {meal.dish_name}
+          </h3>
+          {!isSoldOut ? (
+            <span
+              className={`flex-shrink-0 px-1.5 py-0.5 text-[11px] font-medium rounded ${
+                isUrgent
+                  ? 'bg-primary/25 text-primary animate-pulse'
+                  : 'bg-primary/15 text-primary'
+              }`}
+            >
+              {meal.remaining_portions} left
+            </span>
+          ) : (
+            <span className="flex-shrink-0 px-1.5 py-0.5 text-[11px] font-medium bg-muted text-muted-foreground rounded">
+              Gone
+            </span>
+          )}
+        </div>
+        <p className="text-[13px] text-muted-foreground truncate">
+          {meal.cook_name} · {meal.neighborhood || 'Paris'} · {distance}
+        </p>
+      </div>
+
+      {/* Food Thumbnail */}
+      <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+        {meal.image_url ? (
+          <img
+            src={meal.image_url}
+            alt={meal.dish_name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-lg">
+            🍽️
+          </div>
+        )}
+      </div>
+
+      {/* Price & Action */}
+      <div className="flex flex-col items-end gap-1 flex-shrink-0 min-w-[52px]">
+        <span className="text-[15px] font-semibold text-foreground">
+          €{Number(meal.price).toFixed(0)}
+        </span>
+        {!isCook && !isOwnMeal && (
+          <button
+            onClick={handleOrder}
+            disabled={isSoldOut || !user}
+            className={`px-2.5 py-1 text-[11px] font-medium rounded-full transition-all ${
+              isSoldOut
+                ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                : !user
+                ? 'bg-muted text-muted-foreground'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95'
+            }`}
+          >
+            {isSoldOut ? 'Sold' : !user ? 'Sign in' : 'Order'}
+          </button>
+        )}
+      </div>
+    </motion.div>
+  );
+}
