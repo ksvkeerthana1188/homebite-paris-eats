@@ -16,6 +16,7 @@ export interface OrderWithDetails {
   cook_name: string;
   eater_name: string;
   price: number;
+  cook_nationality: string | null;
 }
 
 export function useOrders() {
@@ -54,7 +55,7 @@ export function useOrders() {
 
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('user_id, display_name')
+        .select('user_id, display_name, nationality')
         .in('user_id', userIds);
 
       const mealMap = new Map(mealsData?.map((m) => [m.id, m]) || []);
@@ -72,6 +73,7 @@ export function useOrders() {
           price: meal?.price || 0,
           cook_name: cookProfile?.display_name || 'Cook',
           eater_name: eaterProfile?.display_name || 'Customer',
+          cook_nationality: (cookProfile as any)?.nationality || null,
         };
       });
 

@@ -70,12 +70,13 @@ export function EaterFeedDB() {
         >
           <h2 className="font-display text-lg text-foreground">Your Orders</h2>
           {activeOrders.map((order) => (
-            <div key={order.id} className="space-y-2">
-              <div className="text-sm font-medium text-foreground">
-                {order.dish_name}
-              </div>
-              <OrderStatusBar status={order.status} cookName={order.cook_name} />
-            </div>
+            <OrderStatusBar 
+              key={order.id}
+              status={order.status} 
+              cookName={order.cook_name}
+              cookNationality={order.cook_nationality}
+              dishName={order.dish_name}
+            />
           ))}
         </motion.div>
       )}

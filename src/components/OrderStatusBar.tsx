@@ -1,11 +1,14 @@
 import { motion } from 'framer-motion';
 import { Check, Package, Clock, MapPin } from 'lucide-react';
+import { getFlag } from '@/lib/nationalities';
 
 type OrderStatus = 'placed' | 'packing' | 'ready' | 'picked_up' | 'cancelled';
 
 interface OrderStatusBarProps {
   status: OrderStatus;
   cookName: string;
+  cookNationality?: string | null;
+  dishName?: string;
 }
 
 const statusSteps = [
@@ -14,8 +17,9 @@ const statusSteps = [
   { key: 'ready', label: 'Ready for Pickup', icon: MapPin },
 ];
 
-export function OrderStatusBar({ status, cookName }: OrderStatusBarProps) {
+export function OrderStatusBar({ status, cookName, cookNationality, dishName }: OrderStatusBarProps) {
   const currentIndex = statusSteps.findIndex((s) => s.key === status);
+  const flag = cookNationality ? getFlag(cookNationality) : '👨‍🍳';
   const isReady = status === 'ready';
   const isPickedUp = status === 'picked_up';
 
@@ -87,13 +91,23 @@ export function OrderStatusBar({ status, cookName }: OrderStatusBarProps) {
         })}
       </div>
 
-      {/* Status message */}
+      {/* Status message with flag and dish name */}
       <div className="text-center text-sm text-muted-foreground">
-        {status === 'placed' && `${cookName} received your order`}
-        {status === 'packing' && `${cookName} is packing your meal...`}
+        {status === 'placed' && (
+          <span>
+            Track: {flag} <span className="font-medium text-foreground">{cookName}</span> received your order
+            {dishName && <span className="text-primary"> for {dishName}</span>}
+          </span>
+        )}
+        {status === 'packing' && (
+          <span>
+            Track: {flag} <span className="font-medium text-foreground">{cookName}</span> is preparing your
+            {dishName ? <span className="text-primary"> {dishName}</span> : ' meal'}...
+          </span>
+        )}
         {status === 'ready' && (
           <span className="text-primary font-medium">
-            🎉 {cookName}'s meal is ready for pickup!
+            🎉 {flag} {cookName}'s {dishName || 'meal'} is ready for pickup!
           </span>
         )}
       </div>

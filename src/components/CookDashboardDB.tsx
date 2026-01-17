@@ -417,8 +417,13 @@ export function CookDashboardDB() {
 function ActiveListingCardDB({ meal, index }: { meal: MealWithCook; index: number }) {
   const isSoldOut = meal.remaining_portions <= 0;
   const soldCount = meal.total_portions - meal.remaining_portions;
-  // Progress bar shows remaining inventory: 100% when full, depletes as portions are sold
+  // Progress bar shows remaining inventory: 100% when full (terracotta), depletes as portions are sold
   const remainingPercentage = (meal.remaining_portions / meal.total_portions) * 100;
+  
+  // Display tags for consistency
+  const displayTags = (meal.tags && meal.tags.length >= 2) 
+    ? meal.tags.slice(0, 2) 
+    : ['Home-Cooked', 'Fresh'];
 
   return (
     <motion.div
@@ -439,6 +444,18 @@ function ActiveListingCardDB({ meal, index }: { meal: MealWithCook; index: numbe
         <span className="font-semibold text-primary">€{Number(meal.price).toFixed(0)}</span>
       </div>
 
+      {/* Tags display */}
+      <div className="flex flex-wrap gap-1 mb-2">
+        {displayTags.map((tag) => (
+          <span
+            key={tag}
+            className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+
       <div className="space-y-1">
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>{meal.remaining_portions} remaining</span>
@@ -446,7 +463,7 @@ function ActiveListingCardDB({ meal, index }: { meal: MealWithCook; index: numbe
         </div>
         <Progress
           value={remainingPercentage}
-          className={`h-2 ${isSoldOut ? 'bg-muted' : ''}`}
+          className={`h-2 ${isSoldOut ? 'bg-muted [&>div]:bg-muted-foreground' : ''}`}
         />
       </div>
     </motion.div>
