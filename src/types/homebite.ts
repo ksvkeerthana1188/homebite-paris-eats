@@ -6,6 +6,7 @@ export interface Meal {
   cookName: string;
   cookAvatar?: string;
   neighborhood: string;
+  distance?: string;
   dishName: string;
   description: string;
   price: number;
