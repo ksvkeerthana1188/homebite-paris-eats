@@ -10,6 +10,7 @@ interface Profile {
   display_name: string;
   avatar_url: string | null;
   neighborhood: string | null;
+  nationality: string | null;
 }
 
 interface AuthContextType {
@@ -21,6 +22,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName: string, role: AppRole, neighborhood?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  refetchProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId)
         .maybeSingle();
 
-      setProfile(profileData);
+      setProfile(profileData as Profile | null);
 
       // Fetch role
       const { data: roleData } = await supabase
@@ -88,6 +90,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching user data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refetchProfile = async () => {
+    if (user) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      setProfile(profileData as Profile | null);
     }
   };
 
@@ -169,6 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signIn,
         signOut,
+        refetchProfile,
       }}
     >
       {children}

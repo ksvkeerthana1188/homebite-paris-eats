@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, ChefHat, Bell } from 'lucide-react';
+import { Plus, X, ChefHat, Bell, Settings, Camera } from 'lucide-react';
 import { useMyMeals, MealWithCook } from '@/hooks/useMeals';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/context/AuthContext';
@@ -10,13 +10,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ImageUpload, AvatarUpload } from '@/components/ImageUpload';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export function CookDashboardDB() {
   const { meals, loading: mealsLoading, addMeal } = useMyMeals();
   const { orders, updateOrderStatus } = useOrders();
-  const { user, profile } = useAuth();
+  const { user, profile, refetchProfile } = useAuth();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const [formData, setFormData] = useState({
     dishName: '',
@@ -25,6 +29,25 @@ export function CookDashboardDB() {
     portions: '',
     imageUrl: '',
   });
+
+  const handleAvatarUpdate = async (url: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: url })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      toast.success('Profile picture updated!');
+      refetchProfile?.();
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      toast.error('Failed to update profile picture');
+    }
+  };
 
   // Get orders for this cook's meals
   const myOrders = orders.filter((o) => o.cook_id === user?.id);
@@ -77,20 +100,69 @@ export function CookDashboardDB() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-display text-2xl text-foreground">My Kitchen</h2>
-          <p className="text-sm text-muted-foreground">
-            Welcome back, {profile?.display_name || 'Chef'}!
-          </p>
+        <div className="flex items-center gap-3">
+          {/* Avatar with upload capability */}
+          <AvatarUpload
+            currentAvatar={profile?.avatar_url || undefined}
+            onUploadComplete={handleAvatarUpdate}
+            size="md"
+          />
+          <div>
+            <h2 className="font-display text-2xl text-foreground">My Kitchen</h2>
+            <p className="text-sm text-muted-foreground">
+              Welcome back, {profile?.display_name || 'Chef'}!
+            </p>
+          </div>
         </div>
-        <Button
-          onClick={() => setIsFormOpen(!isFormOpen)}
-          className="bg-primary hover:bg-primary/90"
-        >
-          {isFormOpen ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-          {isFormOpen ? 'Cancel' : "Post Today's Menu"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowSettings(!showSettings)}
+            className="h-10 w-10"
+          >
+            <Settings className="w-4 h-4" />
+          </Button>
+          <Button
+            onClick={() => setIsFormOpen(!isFormOpen)}
+            className="bg-primary hover:bg-primary/90"
+          >
+            {isFormOpen ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+            {isFormOpen ? 'Cancel' : "Post Today's Menu"}
+          </Button>
+        </div>
       </div>
+
+      {/* Settings Panel */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-card border border-border rounded-xl p-6 space-y-4 overflow-hidden"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Camera className="w-5 h-5 text-primary" />
+              <h3 className="font-display text-lg">Profile Settings</h3>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <AvatarUpload
+                currentAvatar={profile?.avatar_url || undefined}
+                onUploadComplete={handleAvatarUpdate}
+                size="lg"
+              />
+              <div>
+                <p className="text-sm font-medium text-foreground">Profile Picture</p>
+                <p className="text-xs text-muted-foreground">
+                  Click to upload a new photo. JPG, PNG or WebP (max 5MB)
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
@@ -157,30 +229,30 @@ export function CookDashboardDB() {
               />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="portions">Portions Available *</Label>
-                <Input
-                  id="portions"
-                  type="number"
-                  min="1"
-                  max="50"
-                  placeholder="6"
-                  value={formData.portions}
-                  onChange={(e) => setFormData({ ...formData, portions: e.target.value })}
-                  required
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="portions">Portions Available *</Label>
+              <Input
+                id="portions"
+                type="number"
+                min="1"
+                max="50"
+                placeholder="6"
+                value={formData.portions}
+                onChange={(e) => setFormData({ ...formData, portions: e.target.value })}
+                required
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="imageUrl">Image URL (optional)</Label>
-                <Input
-                  id="imageUrl"
-                  placeholder="https://..."
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Dish Photo</Label>
+              <ImageUpload
+                bucket="meal-images"
+                folder="dishes"
+                currentImage={formData.imageUrl}
+                onUploadComplete={(url) => setFormData({ ...formData, imageUrl: url })}
+                aspectRatio="landscape"
+                label="Upload a photo of your dish"
+              />
             </div>
 
             <Button type="submit" disabled={isSubmitting} className="w-full">
